@@ -41,20 +41,24 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 async function validateVerificationSetup(readyClient: Client<true>): Promise<void> {
-  const guildId = process.env.GUILD_ID;
-  const welcomeChannelId = process.env.WELCOME_CHANNEL_ID ?? "1553867583969824778";
-  const residentRoleId = process.env.RESIDENT_ROLE_ID ?? "1553870910832771152";
-  if (!guildId) {
-    console.error("Verification setup incomplete: GUILD_ID is missing.");
-    return;
+  try {
+    const guildId = process.env.GUILD_ID;
+    const welcomeChannelId = process.env.WELCOME_CHANNEL_ID ?? "1553867583969824778";
+    const residentRoleId = process.env.RESIDENT_ROLE_ID ?? "1553870910832771152";
+    if (!guildId) {
+      console.error("Verification setup incomplete: GUILD_ID is missing.");
+      return;
+    }
+    const guild = await readyClient.guilds.fetch(guildId);
+    const channel = await guild.channels.fetch(welcomeChannelId);
+    const role = await guild.roles.fetch(residentRoleId);
+    if (!channel || !channel.isTextBased() || !("send" in channel)) console.error(`Verification setup error: welcome channel ${welcomeChannelId} cannot receive messages.`);
+    else console.log(`Verification welcome channel ready: #${"name" in channel ? channel.name : welcomeChannelId}`);
+    if (!role) console.error(`Verification setup error: Resident role ${residentRoleId} was not found.`);
+    else console.log(`Resident verification role ready: ${role.name}`);
+  } catch (error) {
+    console.error("Verification setup validation failed. Check GUILD_ID, WELCOME_CHANNEL_ID, bot channel permissions, and Server Members Intent.", error);
   }
-  const guild = await readyClient.guilds.fetch(guildId);
-  const channel = await guild.channels.fetch(welcomeChannelId);
-  const role = await guild.roles.fetch(residentRoleId);
-  if (!channel || !channel.isTextBased() || !("send" in channel)) console.error(`Verification setup error: welcome channel ${welcomeChannelId} cannot receive messages.`);
-  else console.log(`Verification welcome channel ready: #${"name" in channel ? channel.name : welcomeChannelId}`);
-  if (!role) console.error(`Verification setup error: Resident role ${residentRoleId} was not found.`);
-  else console.log(`Resident verification role ready: ${role.name}`);
 }
 
 client.on(Events.GuildMemberAdd, async (member) => {
