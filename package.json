@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "BCRP Department of Motor Vehicles Discord bot",
+  "description": "BCRP DMV Services Discord bot",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx src/index.ts",

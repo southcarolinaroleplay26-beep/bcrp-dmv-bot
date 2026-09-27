@@ -1,4 +1,4 @@
-# BCRP Department of Motor Vehicles Bot
+# BCRP DMV Services
 
 A persistent Discord slash-command bot for BCRP DMV roleplay. It stores vehicle, license, inspection, and appointment records in `data/records.json`.
 

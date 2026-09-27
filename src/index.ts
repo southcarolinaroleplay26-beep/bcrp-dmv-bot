@@ -16,11 +16,11 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 const statusMessages = [
-  "BCRP DMV | Vehicle Registration",
-  "BCRP DMV | Driver Licensing",
-  "BCRP DMV | Vehicle Inspections",
-  "BCRP DMV | DMV Appointments",
-  "BCRP DMV | Resident Services",
+  "BCRP DMV Services | Vehicle Registration",
+  "BCRP DMV Services | Driver Licensing",
+  "BCRP DMV Services | Vehicle Inspections",
+  "BCRP DMV Services | DMV Appointments",
+  "BCRP DMV Services | Resident Services",
 ];
 let statusIndex = 0;
 
@@ -35,7 +35,7 @@ function updateStatus(): void {
 client.once(Events.ClientReady, (readyClient) => {
   updateStatus();
   setInterval(updateStatus, 30_000);
-  console.log(`BCRP DMV bot online as ${readyClient.user.tag}`);
+  console.log(`BCRP DMV Services online as ${readyClient.user.tag}`);
   console.log(`Loaded ${store.vehicles.length} vehicles, ${store.licenses.length} licenses, and ${store.appointments.length} appointments.`);
 });
 
