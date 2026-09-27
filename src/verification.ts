@@ -9,6 +9,7 @@ import {
 
 const verifyButtonPrefix = "bcrp_verify_account";
 const residentRoleId = process.env.RESIDENT_ROLE_ID ?? "1553870910832771152";
+const welcomeChannelId = process.env.WELCOME_CHANNEL_ID ?? "1553867583969824778";
 
 export function verificationRow(memberId: string): ActionRowBuilder<ButtonBuilder> {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -21,13 +22,9 @@ export function verificationRow(memberId: string): ActionRowBuilder<ButtonBuilde
 
 export async function sendWelcome(member: GuildMember): Promise<void> {
   const { guild } = member;
-  const configuredChannel = process.env.WELCOME_CHANNEL_ID;
-  const channel = configuredChannel
-    ? await guild.channels.fetch(configuredChannel)
-    : guild.systemChannel;
+  const channel = await guild.channels.fetch(welcomeChannelId);
   if (!channel || !channel.isTextBased() || !("send" in channel)) {
-    console.warn(`No welcome channel is available for ${guild.name}. Set WELCOME_CHANNEL_ID in .env.`);
-    return;
+    throw new Error(`Welcome channel ${welcomeChannelId} is unavailable or not writable in ${guild.name}.`);
   }
 
   const welcomeEmbed = new EmbedBuilder()
@@ -42,7 +39,7 @@ export async function sendWelcome(member: GuildMember): Promise<void> {
       { name: "Need help?", value: "Contact a DMV supervisor or server staff." },
     )
     .setThumbnail(member.user.displayAvatarURL())
-    .setFooter({ text: "BCRP Department of Motor Vehicles" })
+    .setFooter({ text: "BCRP DMV Services | Account Verification" })
     .setTimestamp();
 
   await channel.send({

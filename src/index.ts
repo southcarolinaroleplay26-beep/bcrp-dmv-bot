@@ -37,12 +37,30 @@ client.once(Events.ClientReady, (readyClient) => {
   setInterval(updateStatus, 30_000);
   console.log(`BCRP DMV Services online as ${readyClient.user.tag}`);
   console.log(`Loaded ${store.vehicles.length} vehicles, ${store.licenses.length} licenses, and ${store.appointments.length} appointments.`);
+  void validateVerificationSetup(readyClient);
 });
+
+async function validateVerificationSetup(readyClient: Client<true>): Promise<void> {
+  const guildId = process.env.GUILD_ID;
+  const welcomeChannelId = process.env.WELCOME_CHANNEL_ID ?? "1553867583969824778";
+  const residentRoleId = process.env.RESIDENT_ROLE_ID ?? "1553870910832771152";
+  if (!guildId) {
+    console.error("Verification setup incomplete: GUILD_ID is missing.");
+    return;
+  }
+  const guild = await readyClient.guilds.fetch(guildId);
+  const channel = await guild.channels.fetch(welcomeChannelId);
+  const role = await guild.roles.fetch(residentRoleId);
+  if (!channel || !channel.isTextBased() || !("send" in channel)) console.error(`Verification setup error: welcome channel ${welcomeChannelId} cannot receive messages.`);
+  else console.log(`Verification welcome channel ready: #${"name" in channel ? channel.name : welcomeChannelId}`);
+  if (!role) console.error(`Verification setup error: Resident role ${residentRoleId} was not found.`);
+  else console.log(`Resident verification role ready: ${role.name}`);
+}
 
 client.on(Events.GuildMemberAdd, async (member) => {
   try {
     await sendWelcome(member);
-    await logEvent(member.guild, "audit", "Member Joined", `<@${member.id}> joined BCRP and received a verification welcome.`, 0x1976d2);
+    await logEvent(member.guild, "audit", "Member Joined", `<@${member.id}> joined BCRP and received a verification welcome message.`, 0x1976d2);
   } catch (error) {
     console.error("Unable to send welcome message:", error);
   }

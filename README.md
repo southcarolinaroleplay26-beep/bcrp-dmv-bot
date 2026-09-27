@@ -24,7 +24,7 @@ Use `npm run build` followed by `npm start` for a production-style run. Set `STA
 
 ## Verification
 
-Set `WELCOME_CHANNEL_ID` to the channel where new members should see the welcome embed. The welcome message is sent automatically when a member joins; there is no manual welcome command. If it is blank, the bot uses the server system channel. In Server Settings, deny `@everyone` access to member channels and grant the `Resident` role access so verification controls access correctly. Enable the **Server Members Intent** for the bot in the Discord Developer Portal.
+Set `WELCOME_CHANNEL_ID` to `1553867583969824778` or your desired welcome channel. The welcome message is sent automatically when a member joins; there is no manual welcome command. In Server Settings, deny `@everyone` access to member channels and grant the `Resident` role access so verification controls access correctly. The bot role must be above the Resident role. Enable the **Server Members Intent** for the bot in the Discord Developer Portal.
 
 Appointment requests are forwarded to `APPOINTMENT_CHANNEL_ID` and mention `DMV_STAFF_ROLE_ID`. The bot needs permission to view that channel, send messages, and embed links there.
 
