@@ -49,7 +49,7 @@ async function registerCommands(): Promise<void> {
     return;
   }
   try {
-    const rest = new REST({ version: "10" }).setToken(token);
+    const rest = new REST({ version: "10" }).setToken(token!);
     const route = guildId ? Routes.applicationGuildCommands(clientId, guildId) : Routes.applicationCommands(clientId);
     await rest.put(route, { body: commands });
     console.log(`${commands.length} slash commands registered automatically.`);
