@@ -44,7 +44,7 @@ Applications are published with `/application-panel`. Anyone can click **Reply /
 
 The support panel is published with `/support-panel` by a supervisor. Members can open one private ticket at a time; tickets are visible to the opener, DMV staff, supervisors, and `SUPPORT_TEAM_ROLE_ID`. Every new ticket mentions the support team. Set `TICKET_CATEGORY_ID` if tickets should be created under a specific category. The bot needs `Manage Channels` and `Manage Roles` for the support and verification systems.
 
-Shift management uses a Monday-based weekly cycle. DMV staff must record at least 1 hour and 30 minutes each week with `/shift start` and `/shift end`. `/shift review` privately sends an attendance notice to every tracked staff member below the minimum and records the review in audit logs.
+Shift management uses a Monday-based weekly cycle. Staff role `1553870849050808361` can manage only their own time with `/shift start`, `/shift end`, and `/shift status`; `/shift leaderboard` shows this week's totals. DMV administrators alone can run `/shift review`, which privately sends an attendance notice to every tracked staff member below the 1 hour 30 minute minimum and records the review in audit logs.
 - `/help`
 - `/vehicle add`, `/vehicle list`, `/vehicle remove`, `/vehicle transfer`
 - `/license show`, `/license issue`, `/license suspend`, `/license revoke`
