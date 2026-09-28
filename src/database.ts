@@ -44,21 +44,40 @@ export type Appointment = {
   status: "booked" | "cancelled" | "completed";
 };
 
+export type Shift = {
+  userId: string;
+  userTag: string;
+  week: string;
+  totalMs: number;
+  activeSince?: string;
+  updatedAt: string;
+};
+
 export type Store = {
   vehicles: Vehicle[];
   licenses: License[];
   inspections: Inspection[];
   appointments: Appointment[];
+  shifts: Shift[];
 };
 
 const dataPath = path.join(process.cwd(), "data", "records.json");
-const emptyStore: Store = { vehicles: [], licenses: [], inspections: [], appointments: [] };
+const emptyStore: Store = { vehicles: [], licenses: [], inspections: [], appointments: [], shifts: [] };
 
 export async function loadStore(): Promise<Store> {
   await mkdir(path.dirname(dataPath), { recursive: true });
   try {
     const raw = await readFile(dataPath, "utf8");
-    return { ...emptyStore, ...JSON.parse(raw) } as Store;
+    const parsed = JSON.parse(raw) as Partial<Store>;
+    return {
+      ...emptyStore,
+      ...parsed,
+      vehicles: parsed.vehicles ?? [],
+      licenses: parsed.licenses ?? [],
+      inspections: parsed.inspections ?? [],
+      appointments: parsed.appointments ?? [],
+      shifts: parsed.shifts ?? [],
+    } as Store;
   } catch {
     await saveStore(emptyStore);
     return structuredClone(emptyStore);

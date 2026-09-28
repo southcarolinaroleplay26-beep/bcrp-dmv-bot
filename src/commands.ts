@@ -10,6 +10,7 @@ import { makeId, saveStore, Store } from "./database.js";
 import { applicationPanel } from "./applications.js";
 import { logEvent } from "./logging.js";
 import { supportPanel, ticketDetails } from "./support.js";
+import { handleShiftCommand } from "./shifts.js";
 
 const appointmentChannelId = process.env.APPOINTMENT_CHANNEL_ID ?? "1553893891944484864";
 const dmvStaffRoleId = process.env.DMV_STAFF_ROLE_ID ?? "1553870746629967942";
@@ -38,6 +39,12 @@ export const commands = [
   new SlashCommandBuilder().setName("unclaim").setDescription("Release the current claim on this DMV Support ticket"),
   new SlashCommandBuilder().setName("greet").setDescription("Introduce the assigned support representative in a ticket")
     .addStringOption((o) => o.setName("username").setDescription("Your support display name").setMaxLength(80).setRequired(true)),
+  new SlashCommandBuilder().setName("shift").setDescription("Manage weekly DMV staff shifts")
+    .addSubcommand((sub) => sub.setName("start").setDescription("Clock in for a DMV shift"))
+    .addSubcommand((sub) => sub.setName("end").setDescription("Clock out and save your DMV shift"))
+    .addSubcommand((sub) => sub.setName("status").setDescription("View your weekly shift status"))
+    .addSubcommand((sub) => sub.setName("leaderboard").setDescription("View this week's staff shift totals"))
+    .addSubcommand((sub) => sub.setName("review").setDescription("Review weekly attendance and notify incomplete staff")),
   new SlashCommandBuilder().setName("vehicle").setDescription("Manage your DMV vehicle records")
     .addSubcommand((sub) => sub.setName("add").setDescription("Register a vehicle")
       .addStringOption((o) => o.setName("plate").setDescription("License plate").setRequired(true))
@@ -264,8 +271,12 @@ export async function handleCommand(interaction: ChatInputCommandInteraction, st
     await logEvent(interaction.guild, "tickets", "Support Representative Greeted Citizen", `**Ticket:** ${interaction.channel.name}\n**Representative:** <@${interaction.user.id}>\n**Display name:** ${username}`, 0x1976d2);
     return;
   }
+  if (commandName === "shift") {
+    await handleShiftCommand(interaction, store, staffOnly(interaction), staffAdminOnly(interaction));
+    return;
+  }
   if (commandName === "help") {
-    await interaction.reply({ embeds: [embed("BCRP Department of Motor Vehicles", "**Utility commands**\n`/ping` | `/userinfo`\n\n**Citizen commands**\n`/vehicle add|list|remove|transfer`\n`/license show`\n`/appointment book|list|cancel`\n\n**DMV Support commands**\n`/add @member` | `/unclaim` | `/greet username` inside a ticket\n\n**DMV staff commands**\n`/say`\n`/inspection`\n`/inspection-history`\n`/appointment staff-list|complete`\n`/lookup`\n\n**Supervisor commands**\n`/announce`\n`/license issue|suspend|revoke`\n`/support-panel`\n\nKeep all records in-character and follow BCRP server rules.")] });
+    await interaction.reply({ embeds: [embed("BCRP Department of Motor Vehicles", "**Utility commands**\n`/ping` | `/userinfo`\n\n**Citizen commands**\n`/vehicle add|list|remove|transfer`\n`/license show`\n`/appointment book|list|cancel`\n\n**DMV Support commands**\n`/add @member` | `/unclaim` | `/greet username` inside a ticket\n\n**DMV staff commands**\n`/shift start|end|status|leaderboard`\n`/say`\n`/inspection`\n`/inspection-history`\n`/appointment staff-list|complete`\n`/lookup`\n\n**Supervisor commands**\n`/shift review`\n`/announce`\n`/license issue|suspend|revoke`\n`/support-panel`\n\nKeep all records in-character and follow BCRP server rules.")] });
     return;
   }
   if (commandName === "vehicle") {
