@@ -1,7 +1,7 @@
 import "dotenv/config";
-import { ActivityType, Client, Events, GatewayIntentBits, Partials } from "discord.js";
+import { ActivityType, Client, Events, GatewayIntentBits, Partials, REST, Routes } from "discord.js";
 import { handleApplicationButton, handleApplicationMessage, handleApplicationReviewButton, handleApplicationReviewModal } from "./applications.js";
-import { handleCommand } from "./commands.js";
+import { commands, handleCommand } from "./commands.js";
 import { loadStore } from "./database.js";
 import { logEvent } from "./logging.js";
 import { handleSupportInteraction } from "./support.js";
@@ -37,8 +37,26 @@ client.once(Events.ClientReady, (readyClient) => {
   setInterval(updateStatus, 30_000);
   console.log(`BCRP DMV Services online as ${readyClient.user.tag}`);
   console.log(`Loaded ${store.vehicles.length} vehicles, ${store.licenses.length} licenses, and ${store.appointments.length} appointments.`);
+  void registerCommands();
   void validateVerificationSetup(readyClient);
 });
+
+async function registerCommands(): Promise<void> {
+  const clientId = process.env.CLIENT_ID;
+  const guildId = process.env.GUILD_ID;
+  if (!clientId) {
+    console.error("Slash-command registration skipped: CLIENT_ID is missing.");
+    return;
+  }
+  try {
+    const rest = new REST({ version: "10" }).setToken(token);
+    const route = guildId ? Routes.applicationGuildCommands(clientId, guildId) : Routes.applicationCommands(clientId);
+    await rest.put(route, { body: commands });
+    console.log(`${commands.length} slash commands registered automatically.`);
+  } catch (error) {
+    console.error("Automatic slash-command registration failed. Check DISCORD_TOKEN, CLIENT_ID, and GUILD_ID.", error);
+  }
+}
 
 async function validateVerificationSetup(readyClient: Client<true>): Promise<void> {
   try {
