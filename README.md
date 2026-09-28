@@ -36,6 +36,7 @@ Appointment requests are forwarded to `APPOINTMENT_CHANNEL_ID` and mention `DMV_
 - `/support-panel` (supervisors)
 - `/application-panel` (administrators)
 - **DMV Support:** staff claim a ticket, then use `/greet username` to introduce the assigned representative to the citizen.
+- DMV Support staff can use `/add @member` to grant a member ticket access and `/unclaim` to release the current ticket assignment.
 
 Applications are published with `/application-panel`. Anyone can click **Reply / Start Application** and complete the 20-question application in DMs. Applications are reviewed in `APPLICATION_REVIEW_CHANNEL_ID`; anyone with `View Channel` access can click **Accept Applicant** or **Deny Applicant**, but must provide a reason. Accepted applicants receive `STAFF_ROLE_ID` and DMV Trainee role `1553870809838256218`, and every decision is sent to the applicant by DM. Enable the Discord **Message Content Intent** and **Direct Messages** intent for the bot.
 

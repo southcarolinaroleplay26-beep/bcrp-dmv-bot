@@ -33,6 +33,9 @@ export const commands = [
       .addStringOption((o) => o.setName("type").setDescription("Template to apply").setRequired(true).addChoices({ name: "DMV Information", value: "info" }, { name: "Server Rules", value: "rules" }))),
   new SlashCommandBuilder().setName("support-panel").setDescription("Post the DMV Support panel (supervisor only)"),
   new SlashCommandBuilder().setName("application-panel").setDescription("Post the DMV application panel (admin only)"),
+  new SlashCommandBuilder().setName("add").setDescription("Add a member to the current DMV Support ticket")
+    .addUserOption((o) => o.setName("member").setDescription("Member who should access this ticket").setRequired(true)),
+  new SlashCommandBuilder().setName("unclaim").setDescription("Release the current claim on this DMV Support ticket"),
   new SlashCommandBuilder().setName("greet").setDescription("Introduce the assigned support representative in a ticket")
     .addStringOption((o) => o.setName("username").setDescription("Your support display name").setMaxLength(80).setRequired(true)),
   new SlashCommandBuilder().setName("vehicle").setDescription("Manage your DMV vehicle records")
@@ -220,6 +223,32 @@ export async function handleCommand(interaction: ChatInputCommandInteraction, st
     await interaction.reply({ content: "Application panel published. Anyone can click the button to apply.", ephemeral: true });
     return;
   }
+  if (commandName === "add") {
+    if (!supportStaffOnly(interaction)) { await interaction.reply({ content: "Only DMV Support staff can add members to tickets.", ephemeral: true }); return; }
+    if (!interaction.channel || interaction.channel.type !== ChannelType.GuildText) { await interaction.reply({ content: "Use `/add` inside a DMV Support ticket.", ephemeral: true }); return; }
+    const details = ticketDetails(interaction.channel.topic);
+    if (!details) { await interaction.reply({ content: "This is not a DMV Support ticket.", ephemeral: true }); return; }
+    const member = interaction.options.getMember("member");
+    if (!member || !("id" in member)) { await interaction.reply({ content: "That member could not be found in this server.", ephemeral: true }); return; }
+    await interaction.channel.permissionOverwrites.edit(member.id, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true });
+    await interaction.channel.send({ content: `<@${member.id}>`, embeds: [embed("Member Added to Ticket", `<@${member.id}> has been granted access to this DMV Support ticket by <@${interaction.user.id}>.`)], allowedMentions: { users: [member.id, interaction.user.id] } });
+    await logEvent(interaction.guild, "tickets", "Member Added to Support Ticket", `**Ticket:** ${interaction.channel.name}\n**Member:** <@${member.id}>\n**Added by:** <@${interaction.user.id}>`, 0x1976d2);
+    await interaction.reply({ content: `${member} can now view and respond in this ticket.`, ephemeral: true });
+    return;
+  }
+  if (commandName === "unclaim") {
+    if (!supportStaffOnly(interaction)) { await interaction.reply({ content: "Only DMV Support staff can unclaim tickets.", ephemeral: true }); return; }
+    if (!interaction.channel || interaction.channel.type !== ChannelType.GuildText) { await interaction.reply({ content: "Use `/unclaim` inside a DMV Support ticket.", ephemeral: true }); return; }
+    const details = ticketDetails(interaction.channel.topic);
+    if (!details) { await interaction.reply({ content: "This is not a DMV Support ticket.", ephemeral: true }); return; }
+    if (!details.claimedBy) { await interaction.reply({ content: "This ticket is not currently claimed.", ephemeral: true }); return; }
+    if (details.claimedBy !== interaction.user.id && !staffAdminOnly(interaction)) { await interaction.reply({ content: "Only the assigned representative or a DMV administrator can unclaim this ticket.", ephemeral: true }); return; }
+    await interaction.channel.setTopic(`support:${details.ownerId}`);
+    await interaction.channel.send({ embeds: [embed("Ticket Unclaimed", "This ticket is available for another DMV Support representative to claim.")] });
+    await logEvent(interaction.guild, "tickets", "Support Ticket Unclaimed", `**Ticket:** ${interaction.channel.name}\n**Unclaimed by:** <@${interaction.user.id}>`, 0xff8f00);
+    await interaction.reply({ content: "Ticket unclaimed. Another support representative can claim it now.", ephemeral: true });
+    return;
+  }
   if (commandName === "greet") {
     if (!supportStaffOnly(interaction)) { await interaction.reply({ content: "Only DMV Support staff can use this command.", ephemeral: true }); return; }
     if (!interaction.channel || interaction.channel.type !== ChannelType.GuildText) { await interaction.reply({ content: "Use `/greet` inside a DMV Support ticket.", ephemeral: true }); return; }
@@ -236,7 +265,7 @@ export async function handleCommand(interaction: ChatInputCommandInteraction, st
     return;
   }
   if (commandName === "help") {
-    await interaction.reply({ embeds: [embed("BCRP Department of Motor Vehicles", "**Utility commands**\n`/ping` | `/userinfo`\n\n**Citizen commands**\n`/vehicle add|list|remove|transfer`\n`/license show`\n`/appointment book|list|cancel`\n\n**DMV Support commands**\n`/greet username` inside a claimed ticket\n\n**DMV staff commands**\n`/say`\n`/inspection`\n`/inspection-history`\n`/appointment staff-list|complete`\n`/lookup`\n\n**Supervisor commands**\n`/announce`\n`/license issue|suspend|revoke`\n`/support-panel`\n\nKeep all records in-character and follow BCRP server rules.")] });
+    await interaction.reply({ embeds: [embed("BCRP Department of Motor Vehicles", "**Utility commands**\n`/ping` | `/userinfo`\n\n**Citizen commands**\n`/vehicle add|list|remove|transfer`\n`/license show`\n`/appointment book|list|cancel`\n\n**DMV Support commands**\n`/add @member` | `/unclaim` | `/greet username` inside a ticket\n\n**DMV staff commands**\n`/say`\n`/inspection`\n`/inspection-history`\n`/appointment staff-list|complete`\n`/lookup`\n\n**Supervisor commands**\n`/announce`\n`/license issue|suspend|revoke`\n`/support-panel`\n\nKeep all records in-character and follow BCRP server rules.")] });
     return;
   }
   if (commandName === "vehicle") {
